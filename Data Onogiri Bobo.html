@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onigiri 2025 Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* CSS Styling */
+        body { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        * { box-sizing: border-box; }
+        .app-container { width: 100%; max-width: 420px; margin: 0; background: #FFFFFF; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); overflow-y: auto; min-height: 100vh; }
+        .screen { display: none; width: 100%; padding: 24px; }
+        .screen.active { display: block; }
+        .header { background: linear-gradient(135deg, #FF8C42 0%, #FF6B35 100%); color: white; padding: 30px 24px; border-radius: 0 0 24px 24px; margin: -24px -24px 24px -24px; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3); }
+        .header h1 { margin: 0 0 4px 0; font-size: 26px; font-weight: 700; }
+        .header p { margin: 0; font-size: 14px; opacity: 0.95; }
+        .main-buttons { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+        .btn { padding: 18px 24px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        .btn:active:not(:disabled) { transform: translateY(0); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%); color: white; }
+        .btn-secondary { background: linear-gradient(135deg, #FF6B35 0%, #E64A19 100%); color: white; }
+        .btn-dashboard { background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%); color: white; }
+        .btn-history { background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: #333; }
+        .btn-back { background: #F0F0F0; color: #555; padding: 10px 16px; font-size: 14px; border-radius: 8px; margin-bottom: 16px; align-self: flex-start; box-shadow: none; }
+        .btn-icon { font-size: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 14px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 15px; transition: border-color 0.3s ease; background: white; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #FF8C42; box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1); }
+        .form-group input.error, .form-group select.error { border-color: #EF4444; }
+        /* Style untuk container input batch */
+        .batch-container {
+            border: 2px dashed #D1D5DB;
+            border-radius: 12px;
+            padding: 16px;
+            background: #fcfcfc;
+        }
+        .menu-row {
+            display: grid;
+            grid-template-columns: 3fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .menu-row select, .menu-row input {
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+        .menu-row button {
+            padding: 10px;
+            background: #EF4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .menu-row button:hover:not(:disabled) {
+            background: #DC2626;
+        }
+        .menu-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } 
+
+        .dashboard-header { background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .dashboard-header h2 { margin: 0 0 4px 0; font-size: 22px; }
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .metric-card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); text-align: center; }
+        .metric-card.sales { border-bottom: 4px solid #4CAF50; }
+        .metric-card.returns { border-bottom: 4px solid #FF6B35; }
+        .metric-label { font-size: 12px; color: #777; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+        .metric-value { font-size: 28px; font-weight: 700; margin: 0; }
+        .metric-card.sales .metric-value { color: #4CAF50; }
+        .metric-card.returns .metric-value { color: #FF6B35; }
+        .chart-container { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); margin-bottom: 16px; }
+        .chart-title { font-size: 15px; font-weight: 700; margin: 0 0 12px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .loading, .empty-state { text-align: center; padding: 30px 20px; color: #999; }
+        .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; max-width: 90%; font-size: 14px; }
+        .toast.show { opacity: 1; }
+        
+        /* Styles for History Data Table */
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .data-item {
+            display: grid;
+            grid-template-columns: 3fr 1fr auto; /* Details, Qty, Action */
+            align-items: center;
+            background: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid;
+            position: relative;
+        }
+        .data-item.penjualan { border-left-color: #4CAF50; }
+        .data-item.retur { border-left-color: #FF6B35; }
+        .item-type {
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: white;
+        }
+        .data-item.penjualan .item-type { background-color: #4CAF50; }
+        .data-item.retur .item-type { background-color: #FF6B35; }
+
+        .item-details {
+            padding-top: 10px; /* Space for type label */
+        }
+
+        .item-details p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+        .item-details small {
+            display: block;
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .item-qty {
+            font-size: 20px;
+            font-weight: 800;
+            text-align: right;
+            padding-right: 10px;
+        }
+        .item-action {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .btn-delete {
+            background: #EF4444;
+            color: white;
+            padding: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 14px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            box-shadow: none;
+        }
+        .btn-delete:hover {
+            background: #DC2626;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Home Screen -->
+        <div id="homeScreen" class="screen active">
+            <div class="header">
+                <h1>🍙 Onigiri 2025 Manager</h1>
+                <p>Sistem manajemen penjualan & retur</p>
+            </div>
+            <div class="main-buttons">
+                <button class="btn btn-primary" onclick="showInputChoice()"> 
+                    <span class="btn-icon">📝</span> <span>INPUT DATA PENJUALAN & RETUR</span> 
+                </button>
+                <button class="btn btn-history" onclick="showHistoryScreen()"> 
+                    <span class="btn-icon">🔍</span> <span>RIWAYAT & VERIFIKASI DATA</span> 
+                </button>
+                <button class="btn btn-dashboard" onclick="showDashboard()"> 
+                    <span class="btn-icon">📊</span> <span>DASHBOARD OVERVIEW</span> 
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Choice Screen -->
+        <div id="inputChoiceScreen" class="screen">
+            <button class="btn btn-back" onclick="showHome()">← Kembali</button>
+            <div class="header">
+                <h1>Pilih Jenis Input</h1>
+                <p>Pilih jenis data yang akan dicatat</p>
+            </div>
+            <div class="main-buttons">
+                <button class="btn btn-primary" onclick="showBatchInput('penjualan')"> 
+                    <span class="btn-icon">💰</span> <span>INPUT BATCH PENJUALAN</span> 
+                </button>
+                <button class="btn btn-secondary" onclick="showBatchInput('retur')"> 
+                    <span class="btn-icon">↩️</span> <span>INPUT BATCH RETUR</span> 
+                </button>
+            </div>
+        </div>
+
+        <!-- Batch Input Screen -->
+        <div id="batchInputScreen" class="screen">
+            <button class="btn btn-back" onclick="showInputChoice()">← Kembali</button>
+            <div class="header">
+                <h1 id="formTitle">Input Data Batch</h1>
+                <p id="formSubtitle">Input banyak menu sekaligus untuk satu cabang/tanggal</p>
+            </div>
+            <form id="dataForm" onsubmit="handleBatchSubmit(event)">
+                <div class="form-group">
+                    <label for="tanggal">Tanggal</label> 
+                    <input type="date" id="tanggal" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="group">Group</label> 
+                    <select id="group" required>
+                        <option value="">Pilih Group</option>
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label for="cabang">Cabang</label> 
+                    <select id="cabang" required disabled>
+                        <option value="">Pilih Group terlebih dahulu</option>
+                        </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-600 color-555">Varian Menu dan Qty (Batch)</label>
+                    <div id="menuInputContainer" class="batch-container">
+                        <!-- Dynamic rows will be inserted here -->
+                    </div>
+                    <button type="button" class="btn btn-back" style="width: 100%; margin-top: 10px; border: 1px solid #D0D0D0; color: #4CAF50;" onclick="addMenuRow()">
+                        <span class="btn-icon">+</span> TAMBAH VARIAN MENU
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%; margin-top: 16px;"> 
+                    SIMPAN SEMUA DATA (BATCH)
+                </button>
+            </form>
+        </div>
+        <!-- END Batch Input Screen -->
+
+        <!-- NEW: History & Verification Screen -->
+        <div id="historyScreen" class="screen">
+            <button class="btn btn-back" onclick="showHome()">← Kembali</button>
+            <div class="header" style="background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);">
+                <h1>Riwayat & Verifikasi Data</h1>
+                <p>Cek, filter, dan hapus data yang tidak akurat.</p>
+            </div>
+            
+            <div class="history-filters">
+                <!-- Filter Tanggal -->
+                <div class="form-group">
+                    <label for="filterHistoryTanggalStart">Dari Tanggal</label> 
+                    <input type="date" id="filterHistoryTanggalStart">
+                </div>
+                <div class="form-group">
+                    <label for="filterHistoryTanggalEnd">Sampai Tanggal</label> 
+                    <input type="date" id="filterHistoryTanggalEnd">
+                </div>
+                <!-- Filter Group/Cabang -->
+                <div class="filters" style="margin-bottom: 20px;">
+                    <select id="filterHistoryGroup" onchange="filterHistoryCabangByGroup()"> 
+                        <option value="">Semua Group</option> 
+                    </select>
+                    <select id="filterHistoryCabang"> 
+                        <option value="">Semua Cabang</option> 
+                    </select>
+                </div>
+                <button class="btn btn-history" style="width: 100%; padding: 12px; font-size: 14px; color: white;" onclick="renderHistoryData(false)"> 
+                    <span class="btn-icon">🔍</span> <span>TAMPILKAN DATA (FILTER)</span> 
+                </button>
+            </div>
+
+            <div id="historyDataList" class="data-list" style="margin-top: 20px;">
+                <!-- Filtered data will be inserted here -->
+                <div class="loading" id="historyLoading" style="display: none;">Memuat data...</div>
+            </div>
+            
+            <div id="historyEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">
+                    🙁
+                </div>
+                <p>Tidak ada data yang cocok dengan filter Anda.</p>
+            </div>
+        </div>
+        <!-- END NEW: History & Verification Screen -->
+
+        <!-- Dashboard Screen -->
+        <div id="dashboardScreen" class="screen">
+            <button class="btn btn-back" onclick="showHome()">← Kembali</button>
+            <div class="dashboard-header">
+                <h2>Dashboard Overview</h2>
+                <p>Ringkasan Data Penjualan & Retur</p>
+            </div>
+
+            <div class="report-actions" style="display: flex; gap: 8px; margin-bottom: 20px;">
+                <button class="btn btn-secondary" style="flex: 1; padding: 12px; font-size: 14px;" 
+                    onclick="downloadReport('excel')">
+                    <span class="btn-icon">⬇️</span> Download Excel
+                </button>
+                <button class="btn btn-secondary" style="flex: 1; padding: 12px; font-size: 14px; background: #E64A19;" 
+                    onclick="downloadReport('pdf')">
+                    <span class="btn-icon">📄</span> Download PDF
+                </button>
+            </div>
+
+            <div class="filters">
+                <select id="filterTahun" onchange="updateDashboard()"> 
+                    <option value="">Semua Tahun</option> 
+                </select>
+                <select id="filterBulan" onchange="updateDashboard()"> 
+                    <option value="">Semua Bulan</option> 
+                    <option value="Januari">Januari</option> 
+                    <option value="Februari">Februari</option> 
+                    <option value="Maret">Maret</option> 
+                    <option value="April">April</option> 
+                    <option value="Mei">Mei</option> 
+                    <option value="Juni">Juni</option> 
+                    <option value="Juli">Juli</option> 
+                    <option value="Agustus">Agustus</option> 
+                    <option value="September">September</option> 
+                    <option value="Oktober">Oktober</option> 
+                    <option value="November">November</option> 
+                    <option value="Desember">Desember</option> 
+                </select> 
+                
+                <select id="filterGroup" onchange="updateDashboard()"> 
+                    <option value="">Semua Group</option> 
+                </select>
+                <select id="filterCabang" onchange="updateDashboard()"> 
+                    <option value="">Semua Cabang</option> 
+                </select>
+            </div>
+            
+            <div class="metrics">
+                <div class="metric-card sales">
+                    <div class="metric-label">Total Penjualan Qty</div>
+                    <div class="metric-value" id="totalPenjualan">0</div>
+                </div>
+                <div class="metric-card returns">
+                    <div class="metric-label">Total Retur Qty</div>
+                    <div class="metric-value" id="totalRetur">0</div>
+                </div>
+                <div class="metric-card sales" style="grid-column: span 2; border-bottom-color: #2196F3;">
+                    <div class="metric-label" style="color: #2196F3;">Net Sales Qty (Penjualan - Retur)</div>
+                    <div class="metric-value" id="netSales" style="color: #2196F3;">0</div>
+                </div>
+            </div>
+            
+            <div id="chartContainers">
+                <div class="chart-container">
+                    <h3 class="chart-title">Analisis Net Sales QTY per Group</h3>
+                    <canvas id="groupNetSalesChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Penjualan vs Retur per Menu</h3>
+                    <canvas id="menuChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Top 5 Menu Terlaris (Net Sales QTY)</h3>
+                    <canvas id="topMenuChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">Tren Net Sales per Bulan</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">
+                    📊
+                </div>
+                <p>Belum ada data untuk ditampilkan.<br>Mulai input data terlebih dahulu.</p>
+            </div>
+        </div>
+        <!-- End Dashboard Screen -->
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // === KONFIGURASI PENTING ===
+        // GANTI INI DENGAN URL WEB APP APPS SCRIPT ANDA
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyDrBmSpLi9wNqzfWJFD94W48LWdmZsw9dmiQbHRZC9q61XYtRZFRPhCmb0KXrI4nQU-A/exec'; 
+        // ===========================
+
+        const BULAN_ORDER = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        // --- MASTER DATA & STATE ---
+        let currentFormType = '';
+        let allData = [];
+        let rowCounter = 0; // Untuk ID baris input batch
+        let menuChart = null;
+        let trendChart = null;
+        let topMenuChart = null; 
+        let groupNetSalesChart = null; 
+        
+        let groupToCabangMap = {}; 
+        let uniqueGroups = []; 
+        let uniqueYears = []; 
+
+        const MASTER_MENUS = [
+            { value: "Opor Pedas", label: "🌶️ Opor Pedas" }, 
+            { value: "Balado", label: "🔥 Balado" }, 
+            { value: "Hot Tuna", label: "🐟 Hot Tuna" }, 
+            { value: "Pandan", label: "🍃 Pandan" }, 
+            { value: "Rendang", label: "🥩 Rendang" }, 
+            { value: "Tuna", label: "🐟 Tuna" }
+        ];
+
+        // --- Navigasi ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        function showHome() { showScreen('homeScreen'); }
+        function showInputChoice() { showScreen('inputChoiceScreen'); }
+        
+        function showHistoryScreen() {
+            showScreen('historyScreen');
+            // Pastikan filter group/cabang terisi
+            populateSelect(document.getElementById('filterHistoryGroup'), uniqueGroups, 'Semua Group');
+            filterHistoryCabangByGroup(); // Reset cabang filter
+            
+            // Muat data saat layar history dibuka
+            renderHistoryData(true); 
+        }
+
+        function showBatchInput(type) {
+            currentFormType = type;
+            const formTitle = document.getElementById('formTitle');
+            const formSubtitle = document.getElementById('formSubtitle');
+            
+            if (type === 'penjualan') {
+                formTitle.textContent = 'Input Batch Penjualan';
+                document.getElementById('submitBtn').classList.remove('btn-secondary');
+                document.getElementById('submitBtn').classList.add('btn-primary');
+            } else {
+                formTitle.textContent = 'Input Batch Retur';
+                document.getElementById('submitBtn').classList.remove('btn-primary');
+                document.getElementById('submitBtn').classList.add('btn-secondary');
+            }
+            formSubtitle.textContent = `Input banyak varian ${type} sekaligus untuk satu cabang/tanggal.`;
+            
+            document.getElementById('dataForm').reset();
+            const selectGroup = document.getElementById('group');
+            populateSelect(selectGroup, uniqueGroups, 'Pilih Group'); 
+            selectGroup.onchange = filterCabangByGroup;
+            document.getElementById('tanggal').valueAsDate = new Date(); 
+            filterCabangByGroup(); 
+
+            document.getElementById('menuInputContainer').innerHTML = '';
+            rowCounter = 0;
+            addMenuRow();
+
+            showScreen('batchInputScreen');
+        }
+
+        // --- Dynamic Data & Filtering (Input Form) ---
+
+        function populateSelect(selectElement, values, placeholder) {
+            const currentValue = selectElement.value; // Simpan nilai yang dipilih
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            
+            if (values.length === 0 && placeholder === 'Pilih Group') {
+                 selectElement.innerHTML += `<option value="[INPUT_NEW]">[Data Kosong, Ketik Nama Group Baru]</option>`;
+            }
+            
+            values.forEach(val => {
+                const option = document.createElement('option');
+                option.value = val;
+                option.textContent = val;
+                selectElement.appendChild(option);
+            });
+
+            // Kembalikan nilai yang dipilih jika masih valid
+            if (values.includes(currentValue) || currentValue === "") {
+                 selectElement.value = currentValue;
+            }
+        }
+        
+        function extractUniqueValues(data) {
+            const groupSet = new Set();
+            const yearSet = new Set();
+            groupToCabangMap = {}; 
+
+            data.forEach(d => {
+                const group = d.group ? String(d.group).trim() : null;
+                const cabang = d.cabang ? String(d.cabang).trim() : null;
+                const year = d.tahun; 
+
+                if (year && year !== 'N/A') yearSet.add(year);
+
+                if (group && group !== '') {
+                    groupSet.add(group);
+                    
+                    if (cabang && cabang !== '') {
+                        if (!groupToCabangMap[group]) {
+                            groupToCabangMap[group] = new Set();
+                        }
+                        groupToCabangMap[group].add(cabang);
+                    }
+                }
+            });
+            
+            uniqueGroups = Array.from(groupSet).sort(); 
+            uniqueYears = Array.from(yearSet).sort((a, b) => b - a); 
+            
+            for (const group in groupToCabangMap) {
+                groupToCabangMap[group] = Array.from(groupToCabangMap[group]).sort();
+            }
+
+            // Update filters di semua layar
+            updateYearFilter();
+            updateGroupFilter(uniqueGroups);
+            let allCabangs = [];
+            Object.values(groupToCabangMap).forEach(cabangList => {
+                 allCabangs.push(...cabangList);
+            });
+            updateCabangFilter(Array.from(new Set(allCabangs)).sort()); 
+            
+            // Update dropdown input jika sedang berada di layar input
+            if (document.getElementById('batchInputScreen').classList.contains('active')) {
+                const selectGroup = document.getElementById('group');
+                populateSelect(selectGroup, uniqueGroups, 'Pilih Group');
+                filterCabangByGroup();
+            }
+        }
+
+        function filterCabangByGroup() {
+            let selectCabang = document.getElementById('cabang');
+            const selectedGroup = document.getElementById('group').value;
+
+            if (selectCabang.tagName === 'INPUT' && selectedGroup !== '[INPUT_NEW]') {
+                const parent = selectCabang.parentElement;
+                selectCabang.remove();
+                selectCabang = document.createElement('select');
+                selectCabang.id = 'cabang';
+                selectCabang.required = true;
+                parent.appendChild(selectCabang);
+            }
+            
+            if (selectCabang.tagName === 'SELECT') {
+                selectCabang.disabled = true;
+                selectCabang.innerHTML = '<option value="">Pilih Cabang</option>';
+
+                if (selectedGroup) {
+                    if (selectedGroup === '[INPUT_NEW]') {
+                        selectCabang.outerHTML = `<input type="text" id="cabang" required placeholder="Ketik Nama Cabang Baru">`;
+                    } else {
+                        const cabangs = groupToCabangMap[selectedGroup] ? groupToCabangMap[selectedGroup].sort() : [];
+                        populateSelect(selectCabang, cabangs, 'Pilih Cabang');
+                        selectCabang.disabled = false;
+                    }
+                } else {
+                    populateSelect(selectCabang, [], 'Pilih Group terlebih dahulu');
+                }
+            }
+        }
+        
+        function filterHistoryCabangByGroup() {
+            const selectGroup = document.getElementById('filterHistoryGroup');
+            const selectCabang = document.getElementById('filterHistoryCabang');
+            const selectedGroup = selectGroup.value;
+            const currentCabangValue = selectCabang.value;
+            
+            selectCabang.innerHTML = '<option value="">Semua Cabang</option>';
+
+            if (selectedGroup) {
+                const cabangs = groupToCabangMap[selectedGroup] ? groupToCabangMap[selectedGroup].sort() : [];
+                cabangs.forEach(cabang => {
+                    const option = document.createElement('option');
+                    option.value = cabang;
+                    option.textContent = cabang;
+                    selectCabang.appendChild(option);
+                });
+            }
+            // Pertahankan nilai Cabang yang dipilih jika masih ada dalam daftar baru
+            if (selectCabang.querySelector(`option[value="${currentCabangValue}"]`)) {
+                 selectCabang.value = currentCabangValue;
+            } else {
+                 selectCabang.value = "";
+            }
+
+            renderHistoryData(false); // Update data setelah filter cabang berubah
+        }
+
+        // --- Dynamic Batch Row Management ---
+        window.addMenuRow = function() {
+            rowCounter++;
+            const menuOptions = MASTER_MENUS.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+
+            const newRowHtml = `
+                <div id="row-${rowCounter}" class="menu-row">
+                    <!-- Menu Select -->
+                    <select id="menu-${rowCounter}" data-type="menu" required> 
+                        <option value="">-- Pilih Menu --</option> 
+                        ${menuOptions}
+                    </select>
+                    
+                    <!-- Qty Input -->
+                    <input type="number" id="qty-${rowCounter}" data-type="qty" placeholder="Qty" min="1" required>
+                    
+                    <!-- Delete Button -->
+                    <button type="button" onclick="removeMenuRow(${rowCounter})" class="delete-btn">
+                        X
+                    </button>
+                </div>
+            `;
+            document.getElementById('menuInputContainer').insertAdjacentHTML('beforeend', newRowHtml);
+            
+            checkDeleteButtons();
+        }
+
+        window.removeMenuRow = function(id) {
+            const rowElement = document.getElementById(`row-${id}`);
+            if (rowElement) {
+                rowElement.remove();
+                checkDeleteButtons();
+            }
+        }
+
+        function checkDeleteButtons() {
+            const rows = document.querySelectorAll('#menuInputContainer .menu-row');
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.disabled = rows.length <= 1;
+            });
+        }
+        
+        // --- Batch Form Submission (POST ke Apps Script) ---
+
+        async function handleBatchSubmit(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Menyimpan... Harap Tunggu...';
+
+            const tanggalInput = document.getElementById('tanggal').value;
+            const groupSelect = document.getElementById('group');
+            const cabangInput = document.getElementById('cabang'); 
+            
+            const groupValue = groupSelect.value;
+            const cabangValue = cabangInput.value;
+
+            if (!tanggalInput || !groupValue || !cabangValue || groupValue === '[INPUT_NEW]') {
+                 showToast('Lengkapi Tanggal, Group, dan Cabang. Jika Group baru, pastikan Cabang juga diisi.');
+                 submitBtn.disabled = false;
+                 submitBtn.textContent = 'SIMPAN SEMUA DATA (BATCH)';
+                 return;
+            }
+
+            const menuRows = document.querySelectorAll('#menuInputContainer .menu-row');
+            let batchData = [];
+            let isValid = true;
+            let totalSaved = 0;
+
+            menuRows.forEach(row => {
+                const id = row.id.split('-')[1];
+                const menuSelect = document.getElementById(`menu-${id}`);
+                const qtyInput = document.getElementById(`qty-${id}`);
+                
+                const menuValue = menuSelect ? menuSelect.value : '';
+                const qtyValue = parseInt(qtyInput ? qtyInput.value : 0) || 0;
+
+                if (!menuValue || qtyValue <= 0) {
+                    isValid = false;
+                    if (menuSelect) menuSelect.classList.add('error');
+                    if (qtyInput) qtyInput.classList.add('error');
+                } else {
+                    if (menuSelect) menuSelect.classList.remove('error');
+                    if (qtyInput) qtyInput.classList.remove('error');
+                    
+                    batchData.push({
+                        type: currentFormType,
+                        tanggal: tanggalInput,
+                        group: groupValue,
+                        cabang: cabangValue,
+                        menu: menuValue,
+                        qty: qtyValue
+                    });
+                }
+            });
+
+            if (!isValid) {
+                 showToast('Periksa kembali semua baris Menu & Qty. Pastikan terisi dan Qty > 0.');
+                 submitBtn.disabled = false;
+                 submitBtn.textContent = 'SIMPAN SEMUA DATA (BATCH)';
+                 return;
+            }
+            
+            if (batchData.length === 0) {
+                 showToast('Tambahkan minimal satu baris menu untuk disimpan.');
+                 submitBtn.disabled = false;
+                 submitBtn.textContent = 'SIMPAN SEMUA DATA (BATCH)';
+                 return;
+            }
+
+
+            // Kirim setiap baris sebagai permintaan individu (simulasi batch)
+            try {
+                for (const item of batchData) {
+                    const response = await fetch(GAS_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                        body: JSON.stringify(item)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.isOk) {
+                        totalSaved++;
+                    } else {
+                        console.error(`Gagal menyimpan item ${item.menu}:`, result.error);
+                    }
+                }
+                
+                if (totalSaved > 0) {
+                    await fetchAllData(true); // Muat ulang data secara paksa
+                    showToast(`Berhasil menyimpan ${totalSaved} dari ${batchData.length} data ${currentFormType.toUpperCase()}!`);
+                    
+                    // Reset form dan navigasi
+                    document.getElementById('dataForm').reset();
+                    document.getElementById('menuInputContainer').innerHTML = '';
+                    rowCounter = 0;
+                    addMenuRow();
+                    
+                    const selectGroup = document.getElementById('group');
+                    populateSelect(selectGroup, uniqueGroups, 'Pilih Group');
+                    selectGroup.onchange = filterCabangByGroup;
+                    document.getElementById('tanggal').valueAsDate = new Date(); 
+                    filterCabangByGroup();
+
+                    setTimeout(() => showHistoryScreen(), 1500); 
+                } else {
+                    showToast('Gagal menyimpan semua data. Cek Apps Script Anda.');
+                }
+
+            } catch (error) {
+                showToast('Gagal koneksi atau server error saat menyimpan batch.');
+                console.error('Batch Submit Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'SIMPAN SEMUA DATA (BATCH)';
+            }
+        }
+        
+        // --- Dashboard & Data Fetching ---
+        
+        async function fetchAllData(forceFetch = false) {
+            if (allData.length > 0 && !forceFetch && uniqueGroups.length > 0) {
+                return;
+            }
+            
+            try {
+                // Tampilkan loading di layar History jika sedang aktif
+                const historyLoading = document.getElementById('historyLoading');
+                if (document.getElementById('historyScreen').classList.contains('active')) {
+                    historyLoading.style.display = 'block';
+                }
+                showToast('Memuat data dari Google Sheets...');
+                
+                const response = await fetch(`${GAS_URL}?action=get_data`);
+                const result = await response.json();
+
+                if (result.isOk) {
+                    allData = result.data.map((d, index) => {
+                        const dateObj = d.tanggal ? new Date(d.tanggal + 'T00:00:00') : null;
+                        
+                        let bulanValue = 'N/A';
+                        let tahunValue = 'N/A';
+                        let dateFormatted = d.tanggal || 'N/A';
+                        let dateObject = null; // Tambahkan objek Date untuk filtering
+
+                        if (dateObj && !isNaN(dateObj)) {
+                            dateObject = dateObj; 
+                            const monthIndex = dateObj.getMonth();
+                            bulanValue = BULAN_ORDER[monthIndex];
+                            tahunValue = dateObj.getFullYear().toString();
+                            dateFormatted = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                        }
+                        
+                        const qtyParsed = parseInt(d.qty) || 0; 
+
+                        return {
+                            ...d,
+                            // Asumsi Apps Script mengembalikan 'uniqueId' atau kita gunakan index sebagai fallback
+                            uniqueId: d.uniqueId || `temp-${index}`, 
+                            qty: qtyParsed, 
+                            tahun: tahunValue, 
+                            bulan: bulanValue,
+                            dateFormatted: dateFormatted,
+                            dateObject: dateObject // Object Date untuk perbandingan
+                        };
+                    }).sort((a, b) => {
+                        // Urutkan data berdasarkan tanggal terbaru
+                        const dateA = a.dateObject ? a.dateObject.getTime() : 0;
+                        const dateB = b.dateObject ? b.dateObject.getTime() : 0;
+                        return dateB - dateA;
+                    });
+                    
+                    extractUniqueValues(allData); 
+                    showToast('Data berhasil dimuat.');
+                    
+                    if (document.getElementById('dashboardScreen').classList.contains('active')) {
+                        updateDashboard();
+                    } else if (document.getElementById('historyScreen').classList.contains('active')) {
+                        renderHistoryData(true);
+                    }
+                    
+                } else {
+                    showToast(`Gagal memuat data: ${result.error || 'Server error'}`);
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                showToast('Gagal koneksi ke Apps Script. Cek koneksi internet Anda atau status deployment Apps Script.');
+            } finally {
+                document.getElementById('historyLoading').style.display = 'none';
+            }
+        }
+        
+        // --- History & Verification Logic ---
+
+        window.deleteTransaction = async function(id) {
+            const confirmed = confirm(`Anda yakin ingin menghapus data dengan ID: ${id}? Tindakan ini tidak dapat dibatalkan.`);
+            if (!confirmed) return;
+            
+            showToast('Menghapus data...');
+            const itemElement = document.getElementById(`item-${id}`);
+            if (itemElement) itemElement.style.opacity = '0.5';
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete_data', uniqueId: id })
+                });
+
+                const result = await response.json();
+                
+                if (result.isOk) {
+                    // Hapus dari state lokal dan DOM
+                    allData = allData.filter(d => d.uniqueId !== id);
+                    if (itemElement) itemElement.remove();
+                    
+                    showToast('Data berhasil dihapus!');
+                    
+                    // Muat ulang dashboard/history jika perlu
+                    extractUniqueValues(allData);
+                    renderHistoryData(false);
+                    updateDashboard(); 
+
+                } else {
+                    showToast(`Gagal menghapus: ${result.error || 'Server error'}`);
+                    if (itemElement) itemElement.style.opacity = '1';
+                }
+            } catch (error) {
+                showToast('Gagal koneksi saat menghapus data.');
+                console.error('Delete Error:', error);
+                if (itemElement) itemElement.style.opacity = '1';
+            }
+        }
+
+        function renderHistoryData(forceFetch = false) {
+            if (forceFetch && allData.length === 0) {
+                 fetchAllData(true); // Pastikan data ditarik jika kosong
+                 return;
+            }
+            
+            const listContainer = document.getElementById('historyDataList');
+            const emptyState = document.getElementById('historyEmptyState');
+            
+            const startDateStr = document.getElementById('filterHistoryTanggalStart').value;
+            const endDateStr = document.getElementById('filterHistoryTanggalEnd').value;
+            const filterGroup = document.getElementById('filterHistoryGroup').value;
+            const filterCabang = document.getElementById('filterHistoryCabang').value;
+
+            listContainer.innerHTML = '';
+
+            let filteredData = allData;
+            
+            // 1. Filter Tanggal
+            let startDate = startDateStr ? new Date(startDateStr + 'T00:00:00') : null;
+            let endDate = endDateStr ? new Date(endDateStr + 'T23:59:59') : null;
+
+            if (startDate && !isNaN(startDate)) {
+                filteredData = filteredData.filter(d => d.dateObject && d.dateObject >= startDate);
+            }
+            if (endDate && !isNaN(endDate)) {
+                filteredData = filteredData.filter(d => d.dateObject && d.dateObject <= endDate);
+            }
+
+            // 2. Filter Group & Cabang
+            if (filterGroup) {
+                filteredData = filteredData.filter(d => String(d.group) === filterGroup);
+            }
+            if (filterCabang) {
+                filteredData = filteredData.filter(d => String(d.cabang) === filterCabang);
+            }
+            
+            if (filteredData.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Tampilkan semua data yang difilter
+            filteredData.forEach(d => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `data-item ${d.type}`;
+                itemDiv.id = `item-${d.uniqueId}`; // Penting untuk penghapusan
+                
+                const typeLabel = d.type === 'penjualan' ? 'PENJUALAN' : 'RETUR';
+                const qtyColor = d.type === 'penjualan' ? '#4CAF50' : '#FF6B35';
+
+                itemDiv.innerHTML = `
+                    <div class="item-type">${typeLabel}</div>
+                    <div class="item-details">
+                        <p>${d.menu || 'N/A'}</p>
+                        <small>${d.cabang || 'N/A'} (${d.group || 'N/A'}) - Tgl: ${d.dateFormatted || 'N/A'}</small>
+                    </div>
+                    <div class="item-qty" style="color: ${qtyColor};">
+                        ${d.qty.toLocaleString('id-ID')}
+                    </div>
+                    <div class="item-action">
+                        <button class="btn-delete" title="Hapus Data" onclick="deleteTransaction('${d.uniqueId}')">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(itemDiv);
+            });
+        }
+        
+        // --- Dashboard Logic ---
+
+        function showDashboard() {
+            showScreen('dashboardScreen');
+            if (allData.length === 0 || uniqueGroups.length === 0) {
+                 fetchAllData(true); 
+            } else {
+                 updateDashboard();
+            }
+        }
+        
+        function updateYearFilter() {
+            const filterTahun = document.getElementById('filterTahun');
+            const currentValue = filterTahun.value;
+            filterTahun.innerHTML = '<option value="">Semua Tahun</option>';
+            uniqueYears.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                filterTahun.appendChild(option);
+            });
+            
+            if (currentValue && uniqueYears.includes(currentValue)) {
+                 filterTahun.value = currentValue;
+            } else if (uniqueYears.length > 0) {
+                 filterTahun.value = uniqueYears[0];
+            }
+        }
+        
+        function updateGroupFilter(groups) {
+            const filterGroup = document.getElementById('filterGroup');
+            const currentValue = filterGroup.value;
+            
+            filterGroup.innerHTML = '<option value="">Semua Group</option>';
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group;
+                option.textContent = group;
+                filterGroup.appendChild(option);
+            });
+            filterGroup.value = currentValue;
+        }
+
+        function updateCabangFilter(cabangs) {
+            const filterCabang = document.getElementById('filterCabang');
+            const currentValue = filterCabang.value;
+            
+            filterCabang.innerHTML = '<option value="">Semua Cabang</option>';
+            cabangs.forEach(cabang => {
+                const option = document.createElement('option');
+                option.value = cabang;
+                option.textContent = cabang;
+                filterCabang.appendChild(option);
+            });
+            
+            filterCabang.value = currentValue;
+        }
+
+        function updateDashboard() {
+            const filterTahun = document.getElementById('filterTahun').value;
+            const filterBulan = document.getElementById('filterBulan').value;
+            const filterGroup = document.getElementById('filterGroup').value; 
+            const filterCabang = document.getElementById('filterCabang').value;
+
+            let filteredData = allData;
+            
+            if (filterTahun) {
+                filteredData = filteredData.filter(d => d.tahun === filterTahun);
+            }
+            if (filterBulan) {
+                filteredData = filteredData.filter(d => d.bulan === filterBulan);
+            }
+            if (filterGroup) { 
+                filteredData = filteredData.filter(d => String(d.group) === filterGroup);
+            }
+            if (filterCabang) {
+                filteredData = filteredData.filter(d => String(d.cabang) === filterCabang); 
+            }
+
+            const emptyStateEl = document.getElementById('emptyState');
+            const chartContainersEl = document.getElementById('chartContainers');
+            if (filteredData.length === 0) {
+                emptyStateEl.style.display = 'block';
+                chartContainersEl.style.display = 'none';
+                document.getElementById('totalPenjualan').textContent = '0';
+                document.getElementById('totalRetur').textContent = '0';
+                document.getElementById('netSales').textContent = '0'; 
+                if (menuChart) menuChart.destroy();
+                if (trendChart) trendChart.destroy();
+                if (topMenuChart) topMenuChart.destroy();
+                if (groupNetSalesChart) groupNetSalesChart.destroy(); 
+                menuChart = trendChart = topMenuChart = groupNetSalesChart = null;
+                return;
+            }
+
+            emptyStateEl.style.display = 'none';
+            chartContainersEl.style.display = 'block';
+
+            const totalPenjualan = filteredData
+                .filter(d => d.type === 'penjualan')
+                .reduce((sum, d) => sum + d.qty, 0);
+            
+            const totalRetur = filteredData
+                .filter(d => d.type === 'retur')
+                .reduce((sum, d) => sum + d.qty, 0); 
+
+            const netSales = totalPenjualan - totalRetur;
+
+            document.getElementById('totalPenjualan').textContent = totalPenjualan.toLocaleString('id-ID');
+            document.getElementById('totalRetur').textContent = totalRetur.toLocaleString('id-ID');
+            document.getElementById('netSales').textContent = netSales.toLocaleString('id-ID'); 
+
+            updateGroupNetSalesChart(filteredData);
+            updateMenuChart(filteredData);
+            updateTrendChart(filteredData);
+            updateTopMenuChart(filteredData); 
+        }
+        
+        function updateGroupNetSalesChart(data) {
+            const netSalesByGroup = {};
+            
+            data.forEach(d => {
+                if (!netSalesByGroup[d.group]) {
+                    netSalesByGroup[d.group] = 0;
+                }
+                netSalesByGroup[d.group] += (d.type === 'penjualan' ? d.qty : -d.qty);
+            });
+
+            const sortedGroups = Object.entries(netSalesByGroup)
+                .sort(([, a], [, b]) => b - a);
+            
+            const labels = sortedGroups.map(([group]) => group);
+            const values = sortedGroups.map(([, qty]) => qty);
+
+            const ctx = document.getElementById('groupNetSalesChart');
+            if (groupNetSalesChart) groupNetSalesChart.destroy();
+
+            groupNetSalesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Net Sales QTY',
+                        data: values,
+                        backgroundColor: values.map(v => v >= 0 ? '#4CAF50' : '#FF6B35'),
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { 
+                        legend: { display: false } 
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: 'Net Sales QTY' }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function updateMenuChart(data) {
+            const menus = MASTER_MENUS.map(m => m.value); 
+            const penjualanData = menus.map(menu => 
+                data.filter(d => d.menu === menu && d.type === 'penjualan').reduce((sum, d) => sum + d.qty, 0)
+            );
+            const returData = menus.map(menu => 
+                data.filter(d => d.menu === menu && d.type === 'retur').reduce((sum, d) => sum + d.qty, 0)
+            );
+
+            const ctx = document.getElementById('menuChart');
+            if (menuChart) menuChart.destroy();
+
+            menuChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: menus,
+                    datasets: [{
+                        label: 'Penjualan',
+                        data: penjualanData,
+                        backgroundColor: '#4CAF50'
+                    }, {
+                        label: 'Retur',
+                        data: returData,
+                        backgroundColor: '#FF6B35'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            title: { display: true, text: 'QTY' }
+                        } 
+                    }
+                }
+            });
+        }
+        
+        function updateTrendChart(data) {
+            const salesByMonth = {};
+            
+            BULAN_ORDER.forEach(bulan => {
+                salesByMonth[bulan] = 0;
+            });
+
+            data.forEach(d => {
+                if (BULAN_ORDER.includes(d.bulan)) {
+                     salesByMonth[d.bulan] += (d.type === 'penjualan' ? d.qty : -d.qty);
+                }
+            });
+
+            const labels = BULAN_ORDER;
+            const values = BULAN_ORDER.map(bulan => salesByMonth[bulan]);
+            
+            const ctx = document.getElementById('trendChart');
+            if (trendChart) trendChart.destroy();
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Net Sales (QTY)',
+                        data: values,
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: false, 
+                            title: { display: true, text: 'Net Sales QTY' }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function updateTopMenuChart(data) {
+            const netSalesByMenu = {};
+            
+            data.forEach(d => {
+                if (!netSalesByMenu[d.menu]) {
+                    netSalesByMenu[d.menu] = 0;
+                }
+                netSalesByMenu[d.menu] += (d.type === 'penjualan' ? d.qty : -d.qty);
+            });
+
+            const sortedMenus = Object.entries(netSalesByMenu)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5); 
+            
+            const labels = sortedMenus.map(([menu]) => menu);
+            const values = sortedMenus.map(([, qty]) => qty);
+
+            const ctx = document.getElementById('topMenuChart');
+            if (topMenuChart) topMenuChart.destroy();
+
+            topMenuChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Net Sales QTY',
+                        data: values,
+                        backgroundColor: ['#4CAF50', '#FF8C42', '#2196F3', '#FFC107', '#9C27B0'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { 
+                        legend: { position: 'right' },
+                        title: { display: true, text: 'Top 5 Menu (Net Sales QTY)' }
+                    }
+                }
+            });
+        }
+        
+        // --- Download Report Function ---
+        async function downloadReport(format) {
+            showToast('Membuat link unduhan, tunggu sebentar...');
+
+            const exportUrl = `${GAS_URL}?action=get_export_link`; 
+
+            try {
+                const response = await fetch(exportUrl);
+                const result = await response.json();
+                
+                if (result.isOk) {
+                    let urlToOpen;
+                    if (format === 'excel') {
+                        urlToOpen = result.excelUrl;
+                    } else if (format === 'pdf') {
+                        urlToOpen = result.pdfUrl;
+                    }
+
+                    window.open(urlToOpen, '_blank');
+                    showToast(`Unduhan ${format.toUpperCase()} dimulai!`);
+                } else {
+                    showToast('Gagal membuat link unduhan. Pastikan Apps Script sudah di-deploy ulang dan memiliki fungsi get_export_link.');
+                }
+
+            } catch (error) {
+                console.error('Download Error:', error);
+                showToast('Gagal koneksi ke Apps Script.');
+            }
+        }
+
+        // --- Utility ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // --- Inisialisasi ---
+        document.addEventListener('DOMContentLoaded', () => {
+             // Fetch data saat DOM content diload. 
+             fetchAllData(true).then(() => {
+                const selectGroup = document.getElementById('group');
+                populateSelect(selectGroup, uniqueGroups, 'Pilih Group');
+                selectGroup.onchange = filterCabangByGroup;
+                document.getElementById('tanggal').valueAsDate = new Date(); 
+                addMenuRow(); 
+                filterCabangByGroup(); 
+            });
+        });
+    </script>
+</body>
+</html>

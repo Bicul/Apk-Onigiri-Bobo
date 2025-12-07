@@ -23,7 +23,7 @@
         .btn-primary { background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%); color: white; }
         .btn-secondary { background: linear-gradient(135deg, #FF6B35 0%, #E64A19 100%); color: white; }
         .btn-dashboard { background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%); color: white; }
-        .btn-history { background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: #333; }
+        .btn-check { background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: #333; }
         .btn-back { background: #F0F0F0; color: #555; padding: 10px 16px; font-size: 14px; border-radius: 8px; margin-bottom: 16px; align-self: flex-start; box-shadow: none; }
         .btn-icon { font-size: 20px; }
         .form-group { margin-bottom: 16px; }
@@ -66,10 +66,10 @@
             cursor: not-allowed;
         }
 
-        .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } 
-
         .dashboard-header { background: linear-gradient(135deg, #2196F3 0%, #1565C0 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
         .dashboard-header h2 { margin: 0 0 4px 0; font-size: 22px; }
+        .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; } 
+        .filters select { padding: 10px; border: 1px solid #D0D0D0; border-radius: 8px; font-size: 13px; background: white; }
         .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .metric-card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); text-align: center; }
         .metric-card.sales { border-bottom: 4px solid #4CAF50; }
@@ -85,43 +85,30 @@
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; max-width: 90%; font-size: 14px; }
         .toast.show { opacity: 1; }
         
-        /* Styles for History Data Table */
+        /* New styles for Latest Data Table */
         .data-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
         .data-item {
             display: grid;
-            grid-template-columns: 3fr 1fr auto; /* Details, Qty, Action */
+            grid-template-columns: 1fr 3fr;
             align-items: center;
             background: #fff;
             padding: 12px 16px;
             border-radius: 12px;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
             border-left: 5px solid;
-            position: relative;
         }
         .data-item.penjualan { border-left-color: #4CAF50; }
         .data-item.retur { border-left-color: #FF6B35; }
         .item-type {
-            position: absolute;
-            top: 4px;
-            left: 8px;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 10px;
-            padding: 2px 4px;
-            border-radius: 4px;
-            color: white;
+            font-size: 12px;
+            color: #777;
         }
-        .data-item.penjualan .item-type { background-color: #4CAF50; }
-        .data-item.retur .item-type { background-color: #FF6B35; }
-
-        .item-details {
-            padding-top: 10px; /* Space for type label */
-        }
-
         .item-details p {
             margin: 0;
             font-size: 15px;
@@ -138,29 +125,11 @@
             font-size: 20px;
             font-weight: 800;
             text-align: right;
-            padding-right: 10px;
         }
-        .item-action {
-            display: flex;
-            justify-content: flex-end;
-        }
-        .btn-delete {
-            background: #EF4444;
-            color: white;
-            padding: 8px;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            font-size: 14px;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-            box-shadow: none;
-        }
-        .btn-delete:hover {
-            background: #DC2626;
+        .data-item .grid-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
         }
 
     </style>
@@ -177,8 +146,8 @@
                 <button class="btn btn-primary" onclick="showInputChoice()"> 
                     <span class="btn-icon">📝</span> <span>INPUT DATA PENJUALAN & RETUR</span> 
                 </button>
-                <button class="btn btn-history" onclick="showHistoryScreen()"> 
-                    <span class="btn-icon">🔍</span> <span>RIWAYAT & VERIFIKASI DATA</span> 
+                <button class="btn btn-check" onclick="showLatestDataScreen()"> 
+                    <span class="btn-icon">🔍</span> <span>CEK DATA TERBARU</span> 
                 </button>
                 <button class="btn btn-dashboard" onclick="showDashboard()"> 
                     <span class="btn-icon">📊</span> <span>DASHBOARD OVERVIEW</span> 
@@ -246,51 +215,32 @@
         </div>
         <!-- END Batch Input Screen -->
 
-        <!-- NEW: History & Verification Screen -->
-        <div id="historyScreen" class="screen">
+        <!-- NEW: Latest Data Screen -->
+        <div id="latestDataScreen" class="screen">
             <button class="btn btn-back" onclick="showHome()">← Kembali</button>
             <div class="header" style="background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%);">
-                <h1>Riwayat & Verifikasi Data</h1>
-                <p>Cek, filter, dan hapus data yang tidak akurat.</p>
+                <h1>Data Transaksi Terbaru</h1>
+                <p>10 Data Penjualan/Retur yang baru diinput</p>
             </div>
             
-            <div class="history-filters">
-                <!-- Filter Tanggal -->
-                <div class="form-group">
-                    <label for="filterHistoryTanggalStart">Dari Tanggal</label> 
-                    <input type="date" id="filterHistoryTanggalStart">
-                </div>
-                <div class="form-group">
-                    <label for="filterHistoryTanggalEnd">Sampai Tanggal</label> 
-                    <input type="date" id="filterHistoryTanggalEnd">
-                </div>
-                <!-- Filter Group/Cabang -->
-                <div class="filters" style="margin-bottom: 20px;">
-                    <select id="filterHistoryGroup" onchange="filterHistoryCabangByGroup()"> 
-                        <option value="">Semua Group</option> 
-                    </select>
-                    <select id="filterHistoryCabang"> 
-                        <option value="">Semua Cabang</option> 
-                    </select>
-                </div>
-                <button class="btn btn-history" style="width: 100%; padding: 12px; font-size: 14px; color: white;" onclick="renderHistoryData(false)"> 
-                    <span class="btn-icon">🔍</span> <span>TAMPILKAN DATA (FILTER)</span> 
+            <div class="main-buttons" style="margin-bottom: 16px;">
+                 <button class="btn btn-check" style="width: 100%; padding: 12px; font-size: 14px;" onclick="fetchAllData(true)"> 
+                    <span class="btn-icon">🔄</span> <span>MUAT ULANG DATA</span> 
                 </button>
             </div>
 
-            <div id="historyDataList" class="data-list" style="margin-top: 20px;">
-                <!-- Filtered data will be inserted here -->
-                <div class="loading" id="historyLoading" style="display: none;">Memuat data...</div>
+            <div id="latestDataList" class="data-list">
+                <!-- Data terbaru akan dimasukkan di sini -->
             </div>
             
-            <div id="historyEmptyState" class="empty-state" style="display: none;">
+            <div id="latestEmptyState" class="empty-state" style="display: none;">
                 <div class="empty-state-icon">
                     🙁
                 </div>
-                <p>Tidak ada data yang cocok dengan filter Anda.</p>
+                <p>Belum ada data untuk ditampilkan.<br>Silakan input data terlebih dahulu.</p>
             </div>
         </div>
-        <!-- END NEW: History & Verification Screen -->
+        <!-- END NEW: Latest Data Screen -->
 
         <!-- Dashboard Screen -->
         <div id="dashboardScreen" class="screen">
@@ -422,14 +372,9 @@
         function showHome() { showScreen('homeScreen'); }
         function showInputChoice() { showScreen('inputChoiceScreen'); }
         
-        function showHistoryScreen() {
-            showScreen('historyScreen');
-            // Pastikan filter group/cabang terisi
-            populateSelect(document.getElementById('filterHistoryGroup'), uniqueGroups, 'Semua Group');
-            filterHistoryCabangByGroup(); // Reset cabang filter
-            
-            // Muat data saat layar history dibuka
-            renderHistoryData(true); 
+        function showLatestDataScreen() {
+            showScreen('latestDataScreen');
+            renderLatestData();
         }
 
         function showBatchInput(type) {
@@ -449,12 +394,14 @@
             formSubtitle.textContent = `Input banyak varian ${type} sekaligus untuk satu cabang/tanggal.`;
             
             document.getElementById('dataForm').reset();
+            // Inisialisasi Group dan Cabang (menggunakan data dinamis dari GSheet)
             const selectGroup = document.getElementById('group');
-            populateSelect(selectGroup, uniqueGroups, 'Pilih Group'); 
+            populateSelect(selectGroup, uniqueGroups, 'Pilih Group'); // Menggunakan uniqueGroups
             selectGroup.onchange = filterCabangByGroup;
-            document.getElementById('tanggal').valueAsDate = new Date(); 
-            filterCabangByGroup(); 
+            document.getElementById('tanggal').valueAsDate = new Date(); // Set default date
+            filterCabangByGroup(); // Panggil untuk mereset Cabang
 
+            // Hapus baris menu lama dan tambahkan 1 baris baru
             document.getElementById('menuInputContainer').innerHTML = '';
             rowCounter = 0;
             addMenuRow();
@@ -465,12 +412,12 @@
         // --- Dynamic Data & Filtering (Input Form) ---
 
         function populateSelect(selectElement, values, placeholder) {
-            const currentValue = selectElement.value; // Simpan nilai yang dipilih
             selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-            
+            // Logika untuk opsi input baru
             if (values.length === 0 && placeholder === 'Pilih Group') {
                  selectElement.innerHTML += `<option value="[INPUT_NEW]">[Data Kosong, Ketik Nama Group Baru]</option>`;
             }
+            // Catatan: Opsi Cabang baru tidak perlu karena akan diubah menjadi input teks jika Group baru dipilih.
             
             values.forEach(val => {
                 const option = document.createElement('option');
@@ -478,13 +425,9 @@
                 option.textContent = val;
                 selectElement.appendChild(option);
             });
-
-            // Kembalikan nilai yang dipilih jika masih valid
-            if (values.includes(currentValue) || currentValue === "") {
-                 selectElement.value = currentValue;
-            }
         }
         
+        // Fungsi ini sekarang mengambil semua Group dan Cabang unik dari data GSheet
         function extractUniqueValues(data) {
             const groupSet = new Set();
             const yearSet = new Set();
@@ -512,12 +455,14 @@
             uniqueGroups = Array.from(groupSet).sort(); 
             uniqueYears = Array.from(yearSet).sort((a, b) => b - a); 
             
+            // Konversi Set Cabang menjadi Array
             for (const group in groupToCabangMap) {
                 groupToCabangMap[group] = Array.from(groupToCabangMap[group]).sort();
             }
 
-            // Update filters di semua layar
+            // 1. Isi dropdown Filter Tahun
             updateYearFilter();
+            // 2. Isi dropdown Filter Group dan Cabang
             updateGroupFilter(uniqueGroups);
             let allCabangs = [];
             Object.values(groupToCabangMap).forEach(cabangList => {
@@ -525,10 +470,14 @@
             });
             updateCabangFilter(Array.from(new Set(allCabangs)).sort()); 
             
-            // Update dropdown input jika sedang berada di layar input
+            // 3. Update dropdown input jika sedang berada di layar input
             if (document.getElementById('batchInputScreen').classList.contains('active')) {
                 const selectGroup = document.getElementById('group');
+                const selectedValue = selectGroup.value; 
                 populateSelect(selectGroup, uniqueGroups, 'Pilih Group');
+                if (uniqueGroups.includes(selectedValue)) {
+                     selectGroup.value = selectedValue; // Pertahankan nilai yang dipilih
+                }
                 filterCabangByGroup();
             }
         }
@@ -537,22 +486,30 @@
             let selectCabang = document.getElementById('cabang');
             const selectedGroup = document.getElementById('group').value;
 
+            // Jika elemen Cabang saat ini adalah Input Text, ubah kembali ke Select jika Group BUKAN INPUT_NEW
             if (selectCabang.tagName === 'INPUT' && selectedGroup !== '[INPUT_NEW]') {
                 const parent = selectCabang.parentElement;
                 selectCabang.remove();
+                
+                // Buat elemen select baru
                 selectCabang = document.createElement('select');
                 selectCabang.id = 'cabang';
                 selectCabang.required = true;
+                
+                // Sisipkan kembali ke DOM
                 parent.appendChild(selectCabang);
             }
             
+            // Lanjutkan dengan logika pengisian atau pengubahan elemen
             if (selectCabang.tagName === 'SELECT') {
                 selectCabang.disabled = true;
                 selectCabang.innerHTML = '<option value="">Pilih Cabang</option>';
 
                 if (selectedGroup) {
                     if (selectedGroup === '[INPUT_NEW]') {
+                         // Jika memilih opsi "Ketik Nama Group Baru", ubah Cabang menjadi input teks
                         selectCabang.outerHTML = `<input type="text" id="cabang" required placeholder="Ketik Nama Cabang Baru">`;
+                        // Tidak perlu data-is-input lagi, cukup cek tag name di handleBatchSubmit
                     } else {
                         const cabangs = groupToCabangMap[selectedGroup] ? groupToCabangMap[selectedGroup].sort() : [];
                         populateSelect(selectCabang, cabangs, 'Pilih Cabang');
@@ -564,33 +521,6 @@
             }
         }
         
-        function filterHistoryCabangByGroup() {
-            const selectGroup = document.getElementById('filterHistoryGroup');
-            const selectCabang = document.getElementById('filterHistoryCabang');
-            const selectedGroup = selectGroup.value;
-            const currentCabangValue = selectCabang.value;
-            
-            selectCabang.innerHTML = '<option value="">Semua Cabang</option>';
-
-            if (selectedGroup) {
-                const cabangs = groupToCabangMap[selectedGroup] ? groupToCabangMap[selectedGroup].sort() : [];
-                cabangs.forEach(cabang => {
-                    const option = document.createElement('option');
-                    option.value = cabang;
-                    option.textContent = cabang;
-                    selectCabang.appendChild(option);
-                });
-            }
-            // Pertahankan nilai Cabang yang dipilih jika masih ada dalam daftar baru
-            if (selectCabang.querySelector(`option[value="${currentCabangValue}"]`)) {
-                 selectCabang.value = currentCabangValue;
-            } else {
-                 selectCabang.value = "";
-            }
-
-            renderHistoryData(false); // Update data setelah filter cabang berubah
-        }
-
         // --- Dynamic Batch Row Management ---
         window.addMenuRow = function() {
             rowCounter++;
@@ -649,12 +579,20 @@
             const groupValue = groupSelect.value;
             const cabangValue = cabangInput.value;
 
-            if (!tanggalInput || !groupValue || !cabangValue || groupValue === '[INPUT_NEW]') {
-                 showToast('Lengkapi Tanggal, Group, dan Cabang. Jika Group baru, pastikan Cabang juga diisi.');
+            if (!tanggalInput || !groupValue || !cabangValue) {
+                 showToast('Lengkapi Tanggal, Group, dan Cabang terlebih dahulu.');
                  submitBtn.disabled = false;
                  submitBtn.textContent = 'SIMPAN SEMUA DATA (BATCH)';
                  return;
             }
+            
+            if (groupValue === '[INPUT_NEW]' || (cabangInput.tagName === 'SELECT' && cabangValue === '')) {
+                 showToast('Pilih Group/Cabang atau input nama Group/Cabang baru.');
+                 submitBtn.disabled = false;
+                 submitBtn.textContent = 'SIMPAN SEMUA DATA (BATCH)';
+                 return;
+            }
+
 
             const menuRows = document.querySelectorAll('#menuInputContainer .menu-row');
             let batchData = [];
@@ -703,7 +641,7 @@
             }
 
 
-            // Kirim setiap baris sebagai permintaan individu (simulasi batch)
+            // 3. Kirim setiap baris sebagai permintaan individu (simulasi batch)
             try {
                 for (const item of batchData) {
                     const response = await fetch(GAS_URL, {
@@ -731,13 +669,15 @@
                     rowCounter = 0;
                     addMenuRow();
                     
+                    // Reset Group/Cabang dropdowns
                     const selectGroup = document.getElementById('group');
                     populateSelect(selectGroup, uniqueGroups, 'Pilih Group');
                     selectGroup.onchange = filterCabangByGroup;
+                    
                     document.getElementById('tanggal').valueAsDate = new Date(); 
                     filterCabangByGroup();
 
-                    setTimeout(() => showHistoryScreen(), 1500); 
+                    setTimeout(() => showLatestDataScreen(), 1500); // Tampilkan layar data terbaru
                 } else {
                     showToast('Gagal menyimpan semua data. Cek Apps Script Anda.');
                 }
@@ -753,33 +693,28 @@
         
         // --- Dashboard & Data Fetching ---
         
+        // Tambahkan parameter forceFetch (default false)
         async function fetchAllData(forceFetch = false) {
             if (allData.length > 0 && !forceFetch && uniqueGroups.length > 0) {
+                // Jangan fetch jika data sudah ada, kecuali dipaksa
                 return;
             }
             
             try {
-                // Tampilkan loading di layar History jika sedang aktif
-                const historyLoading = document.getElementById('historyLoading');
-                if (document.getElementById('historyScreen').classList.contains('active')) {
-                    historyLoading.style.display = 'block';
-                }
                 showToast('Memuat data dari Google Sheets...');
                 
                 const response = await fetch(`${GAS_URL}?action=get_data`);
                 const result = await response.json();
 
                 if (result.isOk) {
-                    allData = result.data.map((d, index) => {
+                    allData = result.data.map(d => {
                         const dateObj = d.tanggal ? new Date(d.tanggal + 'T00:00:00') : null;
                         
                         let bulanValue = 'N/A';
                         let tahunValue = 'N/A';
                         let dateFormatted = d.tanggal || 'N/A';
-                        let dateObject = null; // Tambahkan objek Date untuk filtering
-
+                        
                         if (dateObj && !isNaN(dateObj)) {
-                            dateObject = dateObj; 
                             const monthIndex = dateObj.getMonth();
                             bulanValue = BULAN_ORDER[monthIndex];
                             tahunValue = dateObj.getFullYear().toString();
@@ -790,28 +725,21 @@
 
                         return {
                             ...d,
-                            // Asumsi Apps Script mengembalikan 'uniqueId' atau kita gunakan index sebagai fallback
-                            uniqueId: d.uniqueId || `temp-${index}`, 
                             qty: qtyParsed, 
                             tahun: tahunValue, 
                             bulan: bulanValue,
-                            dateFormatted: dateFormatted,
-                            dateObject: dateObject // Object Date untuk perbandingan
+                            dateFormatted: dateFormatted // Tambahkan format tanggal yang mudah dibaca
                         };
-                    }).sort((a, b) => {
-                        // Urutkan data berdasarkan tanggal terbaru
-                        const dateA = a.dateObject ? a.dateObject.getTime() : 0;
-                        const dateB = b.dateObject ? b.dateObject.getTime() : 0;
-                        return dateB - dateA;
                     });
                     
                     extractUniqueValues(allData); 
                     showToast('Data berhasil dimuat.');
                     
+                    // Panggil update dashboard/latest data jika sedang aktif
                     if (document.getElementById('dashboardScreen').classList.contains('active')) {
                         updateDashboard();
-                    } else if (document.getElementById('historyScreen').classList.contains('active')) {
-                        renderHistoryData(true);
+                    } else if (document.getElementById('latestDataScreen').classList.contains('active')) {
+                        renderLatestData();
                     }
                     
                 } else {
@@ -820,130 +748,56 @@
             } catch (error) {
                 console.error('Fetch Error:', error);
                 showToast('Gagal koneksi ke Apps Script. Cek koneksi internet Anda atau status deployment Apps Script.');
-            } finally {
-                document.getElementById('historyLoading').style.display = 'none';
             }
         }
         
-        // --- History & Verification Logic ---
-
-        window.deleteTransaction = async function(id) {
-            const confirmed = confirm(`Anda yakin ingin menghapus data dengan ID: ${id}? Tindakan ini tidak dapat dibatalkan.`);
-            if (!confirmed) return;
+        function renderLatestData() {
+            const listContainer = document.getElementById('latestDataList');
+            const emptyState = document.getElementById('latestEmptyState');
             
-            showToast('Menghapus data...');
-            const itemElement = document.getElementById(`item-${id}`);
-            if (itemElement) itemElement.style.opacity = '0.5';
-
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'delete_data', uniqueId: id })
-                });
-
-                const result = await response.json();
-                
-                if (result.isOk) {
-                    // Hapus dari state lokal dan DOM
-                    allData = allData.filter(d => d.uniqueId !== id);
-                    if (itemElement) itemElement.remove();
-                    
-                    showToast('Data berhasil dihapus!');
-                    
-                    // Muat ulang dashboard/history jika perlu
-                    extractUniqueValues(allData);
-                    renderHistoryData(false);
-                    updateDashboard(); 
-
-                } else {
-                    showToast(`Gagal menghapus: ${result.error || 'Server error'}`);
-                    if (itemElement) itemElement.style.opacity = '1';
-                }
-            } catch (error) {
-                showToast('Gagal koneksi saat menghapus data.');
-                console.error('Delete Error:', error);
-                if (itemElement) itemElement.style.opacity = '1';
-            }
-        }
-
-        function renderHistoryData(forceFetch = false) {
-            if (forceFetch && allData.length === 0) {
-                 fetchAllData(true); // Pastikan data ditarik jika kosong
-                 return;
-            }
-            
-            const listContainer = document.getElementById('historyDataList');
-            const emptyState = document.getElementById('historyEmptyState');
-            
-            const startDateStr = document.getElementById('filterHistoryTanggalStart').value;
-            const endDateStr = document.getElementById('filterHistoryTanggalEnd').value;
-            const filterGroup = document.getElementById('filterHistoryGroup').value;
-            const filterCabang = document.getElementById('filterHistoryCabang').value;
-
             listContainer.innerHTML = '';
 
-            let filteredData = allData;
-            
-            // 1. Filter Tanggal
-            let startDate = startDateStr ? new Date(startDateStr + 'T00:00:00') : null;
-            let endDate = endDateStr ? new Date(endDateStr + 'T23:59:59') : null;
-
-            if (startDate && !isNaN(startDate)) {
-                filteredData = filteredData.filter(d => d.dateObject && d.dateObject >= startDate);
-            }
-            if (endDate && !isNaN(endDate)) {
-                filteredData = filteredData.filter(d => d.dateObject && d.dateObject <= endDate);
-            }
-
-            // 2. Filter Group & Cabang
-            if (filterGroup) {
-                filteredData = filteredData.filter(d => String(d.group) === filterGroup);
-            }
-            if (filterCabang) {
-                filteredData = filteredData.filter(d => String(d.cabang) === filterCabang);
-            }
-            
-            if (filteredData.length === 0) {
+            if (allData.length === 0) {
                 emptyState.style.display = 'block';
                 return;
             }
 
             emptyState.style.display = 'none';
 
-            // Tampilkan semua data yang difilter
-            filteredData.forEach(d => {
+            // Urutkan berdasarkan tanggal (asumsi data GSheet sudah terurut/kita ambil 10 data terakhir)
+            // Karena tidak ada timestamp, kita asumsikan 10 data yang ditarik adalah yang terbaru.
+            // Kita ambil 10 data terakhir (yang paling baru diinput)
+            const latest10 = allData.slice(0, 10); 
+
+            latest10.forEach(d => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = `data-item ${d.type}`;
-                itemDiv.id = `item-${d.uniqueId}`; // Penting untuk penghapusan
                 
+                const typeIcon = d.type === 'penjualan' ? '💰' : '↩️';
                 const typeLabel = d.type === 'penjualan' ? 'PENJUALAN' : 'RETUR';
-                const qtyColor = d.type === 'penjualan' ? '#4CAF50' : '#FF6B35';
 
                 itemDiv.innerHTML = `
-                    <div class="item-type">${typeLabel}</div>
-                    <div class="item-details">
-                        <p>${d.menu || 'N/A'}</p>
-                        <small>${d.cabang || 'N/A'} (${d.group || 'N/A'}) - Tgl: ${d.dateFormatted || 'N/A'}</small>
+                    <div class="item-type" style="color: ${d.type === 'penjualan' ? '#4CAF50' : '#FF6B35'};">
+                        ${typeIcon} ${typeLabel}
                     </div>
-                    <div class="item-qty" style="color: ${qtyColor};">
-                        ${d.qty.toLocaleString('id-ID')}
-                    </div>
-                    <div class="item-action">
-                        <button class="btn-delete" title="Hapus Data" onclick="deleteTransaction('${d.uniqueId}')">
-                            🗑️
-                        </button>
+                    <div class="grid-container">
+                        <div class="item-details">
+                            <p>${d.cabang || 'N/A'} (${d.group || 'N/A'})</p>
+                            <small>Menu: ${d.menu || 'N/A'} - Tgl: ${d.dateFormatted || 'N/A'}</small>
+                        </div>
+                        <div class="item-qty" style="color: ${d.type === 'penjualan' ? '#4CAF50' : '#FF6B35'};">
+                            ${d.qty.toLocaleString('id-ID')}
+                        </div>
                     </div>
                 `;
                 listContainer.appendChild(itemDiv);
             });
         }
-        
-        // --- Dashboard Logic ---
 
         function showDashboard() {
             showScreen('dashboardScreen');
             if (allData.length === 0 || uniqueGroups.length === 0) {
+                 // Force fetch data if app is just initialized or groups are empty
                  fetchAllData(true); 
             } else {
                  updateDashboard();
@@ -1283,11 +1137,13 @@
                 toast.classList.remove('show');
             }, 3000);
         }
-        
+
         // --- Inisialisasi ---
         document.addEventListener('DOMContentLoaded', () => {
              // Fetch data saat DOM content diload. 
+             // uniqueGroups dan allData akan terisi, siap untuk Input dan Dashboard.
              fetchAllData(true).then(() => {
+                // Setelah data dimuat, inisialisasi form input
                 const selectGroup = document.getElementById('group');
                 populateSelect(selectGroup, uniqueGroups, 'Pilih Group');
                 selectGroup.onchange = filterCabangByGroup;
